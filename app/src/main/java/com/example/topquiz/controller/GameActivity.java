@@ -1,7 +1,9 @@
-package com.example.topquiz;
+package com.example.topquiz.controller;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+
+import com.example.topquiz.R;
 
 public class GameActivity extends AppCompatActivity {
 
