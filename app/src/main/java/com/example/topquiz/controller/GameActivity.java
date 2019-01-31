@@ -3,8 +3,11 @@ package com.example.topquiz.controller;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -19,73 +22,139 @@ import java.util.Arrays;
 public class GameActivity extends AppCompatActivity implements View.OnClickListener {
 
 
-    private TextView mQuestionText;
-    private Button manswer1Btn;
-    private Button manswer2Btn;
-    private Button manswer3Btn;
-    private Button manswer4Btn;
+
+    private TextView mQuestionTextView;
+    private Button mAnswerButton1;
+    private Button mAnswerButton2;
+    private Button mAnswerButton3;
+    private Button mAnswerButton4;
 
     private QuestionBank mQuestionBank;
     private Question mCurrentQuestion;
+
     private int mScore;
     private int mNumberOfQuestions;
 
     public static final String BUNDLE_EXTRA_SCORE = "BUNDLE_EXTRA_SCORE";
+    public static final String BUNDLE_STATE_SCORE = "currentScore";
+    public static final String BUNDLE_STATE_QUESTION = "currentQuestion";
 
-
-
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-    }
+    private boolean mEnableTouchEvents;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
 
+        System.out.println("GameActivity::onCreate()");
 
+        mQuestionBank = this.generateQuestions();
 
+        if (savedInstanceState != null) {
+            mScore = savedInstanceState.getInt(BUNDLE_STATE_SCORE);
+            mNumberOfQuestions = savedInstanceState.getInt(BUNDLE_STATE_QUESTION);
+        } else {
+            mScore = 0;
+            mNumberOfQuestions = 4;
+        }
+
+        mEnableTouchEvents = true;
 
         // Wire widgets
-        mQuestionBank = this.generateQuestions();
-        mScore=0;
-        mNumberOfQuestions=4;
-
-        mQuestionText = (TextView) findViewById(R.id.activity_game_question_text);
-        manswer1Btn = (Button) findViewById(R.id.activity_game_answer1_btn);
-        manswer2Btn = (Button) findViewById(R.id.activity_game_answer2_btn);
-        manswer3Btn = (Button) findViewById(R.id.activity_game_answer3_btn);
-        manswer3Btn = (Button) findViewById(R.id.activity_game_answer3_btn);
-        manswer4Btn = (Button) findViewById(R.id.activity_game_answer4_btn);
-
+        mQuestionTextView = (TextView) findViewById(R.id.activity_game_question_text);
+        mAnswerButton1 = (Button) findViewById(R.id.activity_game_answer1_btn);
+        mAnswerButton2 = (Button) findViewById(R.id.activity_game_answer2_btn);
+        mAnswerButton3 = (Button) findViewById(R.id.activity_game_answer3_btn);
+        mAnswerButton4 = (Button) findViewById(R.id.activity_game_answer4_btn);
 
         // Use the tag property to 'name' the buttons
-        manswer1Btn.setTag(0);
-        manswer2Btn.setTag(1);
-        manswer3Btn.setTag(2);
-        manswer4Btn.setTag(3);
+        mAnswerButton1.setTag(0);
+        mAnswerButton2.setTag(1);
+        mAnswerButton3.setTag(2);
+        mAnswerButton4.setTag(3);
 
-        manswer1Btn.setOnClickListener(this);
-        manswer2Btn.setOnClickListener(this);
-        manswer3Btn.setOnClickListener(this);
-        manswer4Btn.setOnClickListener(this);
+        mAnswerButton1.setOnClickListener(this);
+        mAnswerButton2.setOnClickListener(this);
+        mAnswerButton3.setOnClickListener(this);
+        mAnswerButton4.setOnClickListener(this);
 
         mCurrentQuestion = mQuestionBank.getQuestion();
         this.displayQuestion(mCurrentQuestion);
+    }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putInt(BUNDLE_STATE_SCORE, mScore);
+        outState.putInt(BUNDLE_STATE_QUESTION, mNumberOfQuestions);
 
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onClick(View v) {
+        int responseIndex = (int) v.getTag();
+
+        if (responseIndex == mCurrentQuestion.getAnswerIndex()) {
+            // Good answer
+            Toast.makeText(this, "Correct", Toast.LENGTH_SHORT).show();
+            mScore++;
+        } else {
+            // Wrong answer
+            Toast.makeText(this, "Wrong answer!", Toast.LENGTH_SHORT).show();
+        }
+
+        mEnableTouchEvents = false;
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mEnableTouchEvents = true;
+
+                // If this is the last question, ends the game.
+                // Else, display the next question.
+                if (--mNumberOfQuestions == 0) {
+                    // End the game
+                    endGame();
+                } else {
+                    mCurrentQuestion = mQuestionBank.getQuestion();
+                    displayQuestion(mCurrentQuestion);
+                }
+            }
+        }, 2000); // LENGTH_SHORT is usually 2 second long
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        return mEnableTouchEvents && super.dispatchTouchEvent(ev);
+    }
+
+    private void endGame() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        builder.setTitle("Well done!")
+                .setMessage("Your score is " + mScore)
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // End the activity
+                        Intent intent = new Intent();
+                        intent.putExtra(BUNDLE_EXTRA_SCORE, mScore);
+                        setResult(RESULT_OK, intent);
+                        finish();
+                    }
+                })
+                .setCancelable(false)
+                .create()
+                .show();
     }
 
     private void displayQuestion(final Question question) {
-        mQuestionText.setText(question.getQuestion());
-        manswer1Btn.setText(question.getChoiceList().get(0));
-        manswer2Btn.setText(question.getChoiceList().get(1));
-        manswer3Btn.setText(question.getChoiceList().get(2));
-        manswer4Btn.setText(question.getChoiceList().get(3));
+        mQuestionTextView.setText(question.getQuestion());
+        mAnswerButton1.setText(question.getChoiceList().get(0));
+        mAnswerButton2.setText(question.getChoiceList().get(1));
+        mAnswerButton3.setText(question.getChoiceList().get(2));
+        mAnswerButton4.setText(question.getChoiceList().get(3));
     }
-
 
     private QuestionBank generateQuestions() {
         Question question1 = new Question("What is the name of the current french president?",
@@ -136,43 +205,37 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    public void onClick(View v) {
-        int responseIndex = (int) v.getTag();
+    protected void onStart() {
+        super.onStart();
 
-        if (responseIndex == mCurrentQuestion.getAnswerIndex()) {
-            // Good answer
-            Toast.makeText(this, "Correct", Toast.LENGTH_SHORT).show();
-            mScore++;
-        } else {
-            // Wrong answer
-            Toast.makeText(this, "Wrong answer!", Toast.LENGTH_SHORT).show();
-
-        }
-
-        if (--mNumberOfQuestions == 0) {
-            // No question left, end the game
-            endGame();
-        } else {
-            mCurrentQuestion = mQuestionBank.getQuestion();
-            displayQuestion(mCurrentQuestion);
-        }
+        System.out.println("GameActivity::onStart()");
     }
 
-    private void endGame() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    @Override
+    protected void onResume() {
+        super.onResume();
 
-        builder.setTitle("Well done!")
-                .setMessage("Your score is " + mScore)
-                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Intent intent = new Intent();
-                        intent.putExtra(BUNDLE_EXTRA_SCORE,mScore);
-                        setResult(RESULT_OK,intent);
-                        finish();
-                    }
-                })
-                .create()
-                .show();
+        System.out.println("GameActivity::onResume()");
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        System.out.println("GameActivity::onPause()");
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        System.out.println("GameActivity::onStop()");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        System.out.println("GameActivity::onDestroy()");
     }
 }
