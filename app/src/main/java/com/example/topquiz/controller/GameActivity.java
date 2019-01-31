@@ -2,8 +2,10 @@ package com.example.topquiz.controller;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.topquiz.R;
 import com.example.topquiz.model.Question;
@@ -11,10 +13,10 @@ import com.example.topquiz.model.QuestionBank;
 
 import java.util.Arrays;
 
-public class GameActivity extends AppCompatActivity {
+public class GameActivity extends AppCompatActivity implements View.OnClickListener {
 
 
-    private TextView mQuestionText ;
+    private TextView mQuestionText;
     private Button manswer1Btn;
     private Button manswer2Btn;
     private Button manswer3Btn;
@@ -28,13 +30,42 @@ public class GameActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
 
+
+        // Wire widgets
         mQuestionBank = this.generateQuestions();
+
+
         mQuestionText = (TextView) findViewById(R.id.activity_game_question_text);
         manswer1Btn = (Button) findViewById(R.id.activity_game_answer1_btn);
         manswer2Btn = (Button) findViewById(R.id.activity_game_answer2_btn);
         manswer3Btn = (Button) findViewById(R.id.activity_game_answer3_btn);
         manswer3Btn = (Button) findViewById(R.id.activity_game_answer3_btn);
         manswer4Btn = (Button) findViewById(R.id.activity_game_answer4_btn);
+
+
+        // Use the tag property to 'name' the buttons
+        manswer1Btn.setTag(0);
+        manswer2Btn.setTag(1);
+        manswer3Btn.setTag(2);
+        manswer4Btn.setTag(3);
+
+        manswer1Btn.setOnClickListener(this);
+        manswer2Btn.setOnClickListener(this);
+        manswer3Btn.setOnClickListener(this);
+        manswer4Btn.setOnClickListener(this);
+
+        mCurrentQuestion = mQuestionBank.getQuestion();
+        this.displayQuestion(mCurrentQuestion);
+
+
+    }
+
+    private void displayQuestion(final Question question) {
+        mQuestionText.setText(question.getQuestion());
+        manswer1Btn.setText(question.getChoiceList().get(0));
+        manswer2Btn.setText(question.getChoiceList().get(1));
+        manswer3Btn.setText(question.getChoiceList().get(2));
+        manswer4Btn.setText(question.getChoiceList().get(3));
     }
 
 
@@ -86,6 +117,18 @@ public class GameActivity extends AppCompatActivity {
                 question9));
     }
 
+    @Override
+    public void onClick(View v) {
+        int responseIndex = (int) v.getTag();
 
+        if (responseIndex == mCurrentQuestion.getAnswerIndex()) {
+            // Good answer
+            Toast.makeText(this, "Correct", Toast.LENGTH_SHORT).show();
 
+        } else {
+            // Wrong answer
+            Toast.makeText(this, "Wrong answer!", Toast.LENGTH_SHORT).show();
+
+        }
+    }
 }
