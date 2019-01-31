@@ -1,8 +1,8 @@
 package com.example.topquiz.controller;
 
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
@@ -20,7 +20,16 @@ public class MainActivity extends AppCompatActivity {
     private EditText mNameInput;
     private Button mPlayButton;
     private User mUser;
+    public static final int GAME_ACTIVITY_REQUEST_CODE=15;
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        if (GAME_ACTIVITY_REQUEST_CODE == requestCode && RESULT_OK == resultCode) {
+            // Fetch the score from the Intent
+            int score = data.getIntExtra(GameActivity.BUNDLE_EXTRA_SCORE, 0);
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +40,8 @@ public class MainActivity extends AppCompatActivity {
         mGreetingText = (TextView) findViewById(R.id.activity_main_greeting_txt);
         mNameInput = (EditText) findViewById(R.id.activity_main_name_input);
         mPlayButton = (Button) findViewById(R.id.activity_main_play_btn);
+
+
 
         mPlayButton.setEnabled(false);//Elle permet de désactiver le bouton de l'interface
         mNameInput.addTextChangedListener(new TextWatcher() {
@@ -48,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
             public void afterTextChanged(Editable s) {
 
             }
+
         });
 
               mPlayButton.setOnClickListener(new View.OnClickListener() {
@@ -59,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
                       //User clicked the Button 
                       Intent GameActivityIntent = new Intent(MainActivity.this,GameActivity.class);
                       startActivity(GameActivityIntent);
-                     
+                      startActivityForResult(GameActivityIntent,GAME_ACTIVITY_REQUEST_CODE);
                   }
               });
 

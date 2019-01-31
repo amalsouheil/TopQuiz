@@ -1,9 +1,10 @@
 package com.example.topquiz.controller;
 
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -28,10 +29,23 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
     private Question mCurrentQuestion;
     private int mScore;
     private int mNumberOfQuestions;
+
+    public static final String BUNDLE_EXTRA_SCORE = "BUNDLE_EXTRA_SCORE";
+
+
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
+
+
 
 
         // Wire widgets
@@ -152,6 +166,9 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
                 .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        Intent intent = new Intent();
+                        intent.putExtra(BUNDLE_EXTRA_SCORE,mScore);
+                        setResult(RESULT_OK,intent);
                         finish();
                     }
                 })
